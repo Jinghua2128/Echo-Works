@@ -1,0 +1,282 @@
+<!-- file: index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+<title>VN Scenario</title>
+
+<style>
+:root {
+  --bg: #f5f5f5;
+  --box: #e0e0e0;
+  --accent: #f47575;
+  --text: #111;
+  --radius: 18px;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: url("assets/office.jpg") no-repeat center center;
+  background-size: cover;
+  overflow: hidden;
+}
+
+.container {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+}
+
+.top {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.character {
+  position: fixed !important;
+  right: 0;
+  bottom: 0;
+
+  height: 85vh;
+  width: auto;
+
+  z-index: 1;
+  pointer-events: none;
+
+  transform: none !important; 
+}
+
+.character.speaking {
+  transform: scale(1.05) !important;
+  transform-origin: bottom right;
+}
+
+.choices {
+  position: absolute;
+  top: 30%;
+  left: 35%;
+  transform: translateX(-50%);
+
+  display: none;
+  flex-direction: column;
+  gap: 12px;
+
+  z-index: 5;
+}
+
+.choice {
+  padding: 14px 20px;
+  background: var(--accent);
+  border-radius: var(--radius);
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.dialogue-container {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+
+  width: 100%;
+  padding: 20px;
+  box-sizing: border-box;
+
+  z-index: 10;
+}
+
+.name-tag {
+  position: absolute;
+  top: -22px;
+  left: 24px;
+  background: var(--accent);
+  padding: 6px 12px;
+  border-radius: var(--radius);
+  font-size: 14px;
+}
+
+.dialogue {
+  background: var(--box);
+  border-radius: var(--radius);
+  padding: 20px;
+  min-height: 120px;
+  font-size: 18px;
+}
+
+@media (max-width: 768px) {
+  .top {
+    flex-direction: column;
+  }
+  .choice {
+    width: 80%;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <img src="assets/sarah.png" id="character" class="character"/>
+
+  <div class="top">
+    <div id="choices" class="choices"></div>
+  </div>
+
+  <div class="dialogue-container">
+    <div id="name" class="name-tag"></div>
+    <div id="text" class="dialogue"></div>
+  </div>
+
+</div>
+
+<script>
+const speed = 25;
+
+const scenes = {
+  start: {
+    speaker: "Scene",
+    text: "Scene 1: Giving feedback. A manager is typing annual feedback into the computer.",
+    choices: [
+      { text: "Keep up the good work next quarter as well.", next: "A" },
+      { text: "Love your consistency. Great work.", next: "B" },
+      { text: "Excellent work exceeding your KPI. If you plan ahead for issues, you'll do even better next quarter.", next: "C" }
+    ]
+  },
+
+  A: {
+    speaker: "Manager",
+    text: "Good job with exceeding your KPI! Keep up the good work in the next quarter, too! Hopefully, you will exceed expectations again.",
+    next: "AB_followup"
+  },
+
+  B: {
+    speaker: "Manager",
+    text: "You're consistent and reliable. That's appreciated as you really tried your best to hit the KPIs, and in fact, you exceeded them by 25%. Good job.",
+    next: "AB_followup"
+  },
+
+  AB_followup: {
+    speaker: "Sarah",
+    text: "Oh, that's good to know! Is that all I need to focus on or improve on? I'm not sure what exactly I should continue doing or what I should improve on.",
+    next: "summary_AB"
+  },
+
+  summary_AB: {
+    speaker: "Summary",
+    text: "Learning: General praise without specific examples may leave employees unsure of what to continue or improve.",
+    choices: []
+  },
+
+  C: {
+    speaker: "Manager",
+    text: "Good job on exceeding your KPI by 25%! I see that you've done well in handling donor complaints independently and supporting onboarding during busy periods. Keep up the good work! One thing to work on is your follow-ups. Planning ahead can prevent issues from piling up.",
+    next: "C2"
+  },
+
+  C2: {
+    speaker: "Sarah",
+    text: "Oh, that's helpful. I didn't realise those specific things stood out. I was honestly just doing my normal job.",
+    next: "C3"
+  },
+
+  C3: {
+    speaker: "Manager",
+    text: "They did. Especially how you handled donor issues independently and supported onboarding during a busy period.",
+    next: "C4"
+  },
+
+  C4: {
+    speaker: "Sarah",
+    text: "So those are the things I should keep doing?",
+    next: "C5"
+  },
+
+  C5: {
+    speaker: "Manager",
+    text: "Yes. That's exactly what makes you stand out and allows you to exceed your KPIs and be an outstanding employee!",
+    next: "summary_C"
+  },
+
+  summary_C: {
+    speaker: "Summary",
+    text: "Learning: Specific, actionable feedback helps employees understand strengths and areas for improvement clearly.",
+    choices: []
+  }
+};
+
+let currentScene = "start";
+let typing = false;
+
+const textEl = document.getElementById("text");
+const nameEl = document.getElementById("name");
+const choicesEl = document.getElementById("choices");
+
+function typeText(text, callback) {
+  let i = 0;
+  typing = true;
+  textEl.textContent = "";
+  choicesEl.style.display = "none";
+
+  function loop() {
+    if (i < text.length) {
+      textEl.textContent += text[i++];
+      setTimeout(loop, speed);
+    } else {
+      typing = false;
+      callback();
+    }
+  }
+  loop();
+}
+
+function renderChoices(choices) {
+  choicesEl.innerHTML = "";
+  if (!choices || choices.length === 0) return;
+
+  choicesEl.style.display = "flex";
+
+  choices.forEach(choice => {
+    const btn = document.createElement("button");
+    btn.className = "choice";
+    btn.textContent = choice.text;
+    btn.onclick = () => renderScene(choice.next);
+    choicesEl.appendChild(btn);
+  });
+}
+
+function renderScene(id) {
+  const scene = scenes[id];
+  currentScene = id;
+
+  const charEl = document.getElementById("character");
+
+  if (scene.speaker === "Sarah") {
+    charEl.classList.add("speaking");
+  } else {
+    charEl.classList.remove("speaking");
+  }
+
+  nameEl.textContent = scene.speaker;
+
+  typeText(scene.text, () => {
+    if (scene.choices) {
+      renderChoices(scene.choices);
+    } else if (scene.next) {
+      setTimeout(() => renderScene(scene.next), 1200);
+    }
+  });
+}
+
+// start
+renderScene(currentScene);
+</script>
+
+</body>
+</html>

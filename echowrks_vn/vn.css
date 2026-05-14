@@ -1,0 +1,75 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: url("assets/office.jpg") no-repeat center center;
+  background-size: cover;
+  overflow: hidden;
+}
+
+.container {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+}
+
+.character {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+
+  height: 85vh;
+  z-index: 1;
+
+  pointer-events: none;
+  transition: transform 0.25s ease;
+}
+
+.character.speaking {
+  transform: scale(1.05);
+}
+
+.choices {
+  position: absolute;
+  top: 35%;
+  left: 50%;
+  transform: translateX(-50%);
+
+  display: none;
+  flex-direction: column;
+  gap: 12px;
+
+  z-index: 3;
+}
+
+.dialogue-container {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+
+  padding: 20px;
+  box-sizing: border-box;
+
+  z-index: 10; 
+}
+
+.dialogue {
+  background: rgba(255,255,255,0.92);
+  border-radius: 20px;
+  padding: 25px;
+  min-height: 160px;
+  font-size: 18px;
+}
+
+.name-tag {
+  position: absolute;
+  top: -18px;
+  left: 30px;
+
+  background: #f47575;
+  padding: 6px 12px;
+  border-radius: 16px;
+  font-size: 14px;
+  color: white;
+  z-index: 11;
+}
