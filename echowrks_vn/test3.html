@@ -9,10 +9,8 @@
 
 <style>
 :root {
-  --bg: #f5f5f5;
-  --box: #e0e0e0;
   --accent: #f47575;
-  --text: #111;
+  --box: rgba(255,255,255,0.92);
   --radius: 18px;
 }
 
@@ -24,49 +22,47 @@ body {
   overflow: hidden;
 }
 
-.container {
-  position: relative;
-  width: 100vw;
-  height: 100vh;
-}
-
-.top {
-  flex: 1;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
+.container { width: 100vw; height: 100vh; position: relative; }
 
 .character {
-  position: fixed !important;
-  right: 0;
-  bottom: 0;
-
-  height: 85vh;
-  width: auto;
-
   z-index: 1;
-  pointer-events: none;
-
-  transform: none !important; 
+  position: fixed;
+  bottom: 0;
+  height: 85vh;
+  transition: all 0.25s ease;
+  filter: brightness(0.6);
 }
 
-.character.speaking {
-  transform: scale(1.05) !important;
-  transform-origin: bottom right;
+/* positions */
+.sarah { right: 0; }
+.manager { left: 0; transform: scaleX(-1); }
+
+/* states */
+.active {
+  transform: scale(1.05);
+  filter: brightness(1);
+  z-index: 2;
 }
+
+.inactive {
+  transform: scale(0.95);
+  filter: brightness(0.4);
+  z-index: 1;
+}
+
+.character.speaking { transform: scale(1.05); }
+.character.frustrated { filter: hue-rotate(-20deg); }
+.character.happy { filter: brightness(1.1); }
 
 .choices {
   position: absolute;
-  top: 30%;
-  left: 35%;
+  top: 35%;
+  left: 25%;
   transform: translateX(-50%);
-
   display: none;
   flex-direction: column;
   gap: 12px;
-
-  z-index: 5;
+  z-index: 99;
 }
 
 .choice {
@@ -74,47 +70,43 @@ body {
   background: var(--accent);
   border-radius: var(--radius);
   border: none;
-  font-size: 16px;
   cursor: pointer;
 }
 
 .dialogue-container {
+  z-index: 10;
   position: fixed;
   bottom: 0;
-  left: 0;
-
   width: 100%;
   padding: 20px;
-  box-sizing: border-box;
-
-  z-index: 10;
-}
-
-.name-tag {
-  position: absolute;
-  top: -22px;
-  left: 24px;
-  background: var(--accent);
-  padding: 6px 12px;
-  border-radius: var(--radius);
-  font-size: 14px;
 }
 
 .dialogue {
   background: var(--box);
   border-radius: var(--radius);
   padding: 20px;
-  min-height: 120px;
-  font-size: 18px;
+  min-height: 140px;
 }
 
-@media (max-width: 768px) {
-  .top {
-    flex-direction: column;
-  }
-  .choice {
-    width: 80%;
-  }
+.name-tag {
+  position: absolute;
+  top: -20px;
+  left: 30px;
+  background: var(--accent);
+  padding: 6px 12px;
+  border-radius: var(--radius);
+  color: white;
+}
+
+/* result overlay */
+.result {
+  position: fixed;
+  top: 40%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 120px;
+  display: none;
+  z-index: 99;
 }
 </style>
 </head>
@@ -122,150 +114,304 @@ body {
 <body>
 
 <div class="container">
+  
+<img src="assets/manager.png" id="manager" class="character manager"/>
+<img src="assets/sarah.png" id="sarah" class="character sarah"/>
 
-  <img src="assets/sarah.png" id="character" class="character"/>
+<div id="choices" class="choices"></div>
 
-  <div class="top">
-    <div id="choices" class="choices"></div>
-  </div>
+<div class="dialogue-container">
+  <div id="name" class="name-tag"></div>
+  <div id="text" class="dialogue"></div>
+</div>
 
-  <div class="dialogue-container">
-    <div id="name" class="name-tag"></div>
-    <div id="text" class="dialogue"></div>
-  </div>
+<div id="result" class="result"></div>
 
 </div>
 
 <script>
-const speed = 25;
+const speed = 20;
 
 const scenes = {
-  start: {
-    speaker: "Scene",
-    text: "Scene 1: Giving feedback. A manager is typing annual feedback into the computer.",
-    choices: [
-      { text: "Keep up the good work next quarter as well.", next: "A" },
-      { text: "Love your consistency. Great work.", next: "B" },
-      { text: "Excellent work exceeding your KPI. If you plan ahead for issues, you'll do even better next quarter.", next: "C" }
-    ]
-  },
 
-  A: {
-    speaker: "Manager",
-    text: "Good job with exceeding your KPI! Keep up the good work in the next quarter, too! Hopefully, you will exceed expectations again.",
-    next: "AB_followup"
-  },
+profile: {
+speaker: "Profile",
+text: `Name: Sarah Tan
+Position: Marketing Executive
+Age: 32
 
-  B: {
-    speaker: "Manager",
-    text: "You're consistent and reliable. That's appreciated as you really tried your best to hit the KPIs, and in fact, you exceeded them by 25%. Good job.",
-    next: "AB_followup"
-  },
+Performance:
+128% KPI achieved
+High-quality work
 
-  AB_followup: {
-    speaker: "Sarah",
-    text: "Oh, that's good to know! Is that all I need to focus on or improve on? I'm not sure what exactly I should continue doing or what I should improve on.",
-    next: "summary_AB"
-  },
+Strengths:
+Proactive, dependable
+Handles pressure well
+Supports juniors
 
-  summary_AB: {
-    speaker: "Summary",
-    text: "Learning: General praise without specific examples may leave employees unsure of what to continue or improve.",
-    choices: []
-  },
+Development:
+Dominates discussions
+Dismisses ideas quickly
+Peers hesitant to challenge`,
+next: "intro"
+},
 
-  C: {
-    speaker: "Manager",
-    text: "Good job on exceeding your KPI by 25%! I see that you've done well in handling donor complaints independently and supporting onboarding during busy periods. Keep up the good work! One thing to work on is your follow-ups. Planning ahead can prevent issues from piling up.",
-    next: "C2"
-  },
+intro: {
+speaker: "Scene",
+text: "The time to give employee feedback has come! While Sarah continues to exceed expectations in performance, recent peer feedback suggests that her communication style may be affecting team collaboration. As a manager, you want to ensure Sarah feels recognized for her achievements while also helping her understand the impact of her behaviours on the team. How would you phrase your feedback?",
+choices: [
+{ text: "Balanced recognition and feedback", next: "A" },
+{ text: "Praise, ignore issue", next: "B" },
+{ text: "Direct criticism", next: "C" }
+]
+},
 
-  C2: {
-    speaker: "Sarah",
-    text: "Oh, that's helpful. I didn't realise those specific things stood out. I was honestly just doing my normal job.",
-    next: "C3"
-  },
+A: {
+speaker: "Manager",
+text: "Sarah, first of all, I want to acknowledge the great work you’ve done this quarter. Your results have been really strong, and the ownership you’ve shown across projects has made a big impact on the team. I also wanted to touch on some peer feedback that came up around team discussions. A few teammates shared that they sometimes find it difficult to contribute ideas in fast-paced conversations. I thought it’d be useful for us to discuss this together because your impact on the team is really significant.",
+next: "A_response"
+},
 
-  C3: {
-    speaker: "Manager",
-    text: "They did. Especially how you handled donor issues independently and supported onboarding during a busy period.",
-    next: "C4"
-  },
+B: {
+speaker: "Manager",
+text: "Hi Sarah, your performance this quarter has honestly been outstanding, and the results speak for themselves. I know there was some feedback around communication during discussions, but I don’t think it takes away from the great work you’ve been doing.",
+next: "B_response"
+},
 
-  C4: {
-    speaker: "Sarah",
-    text: "So those are the things I should keep doing?",
-    next: "C5"
-  },
+C: {
+speaker: "Manager",
+text: "Hi Sarah, your performance has been great overall, but I’ve received feedback that you can come across as intimidating in team discussions and that people sometimes feel uncomfortable sharing ideas around you.",
+next: "C_response"
+},
 
-  C5: {
-    speaker: "Manager",
-    text: "Yes. That's exactly what makes you stand out and allows you to exceed your KPIs and be an outstanding employee!",
-    next: "summary_C"
-  },
+/* WRONG PATHS */
 
-  summary_C: {
-    speaker: "Summary",
-    text: "Learning: Specific, actionable feedback helps employees understand strengths and areas for improvement clearly.",
-    choices: []
-  }
+B_response: {
+speaker: "Sarah",
+text: "Thanks, I appreciate that. I know I can be direct sometimes, but at the end of the day we’ve still been delivering strong results",
+character: "happy",
+next: "B_outcome"
+},
+
+B_outcome: {
+speaker: "Outcome",
+text: "The conversation ends positively, but the behavioural concern is never properly addressed. Sarah leaves believing the issue is minor because her performance outweighs the impact on the team.",
+effect: "fail",
+next: "B_learn"
+},
+
+B_learn: {
+speaker: "Lesson",
+text: "You acknowledged Sarah’s achievements but minimized the developmental feedback. Strong performance should not prevent you from objectively evaluating behaviours that affect team collaboration.",
+next: "hr_fail"
+},
+
+C_response: {
+speaker: "Sarah",
+text: "Intimidating? I’m not trying to make anyone uncomfortable. I just expect people to speak up if they have something to say.",
+character: "frustrated",
+next: "C_outcome"
+},
+
+C_outcome: {
+speaker: "Outcome",
+text: "Sarah becomes defensive and focuses on defending her intentions rather than reflecting on the feedback itself. This makes the conversation become emotionally tense and less productive.",
+effect: "fail",
+next: "C_learn"
+},
+
+C_learn: {
+speaker: "Lesson",
+text: "The feedback you chose relied on labels and interpretations instead of observable behaviours. Words like “intimidating” can feel personal and make employees defensive.",
+next: "hr_fail"
+},
+
+/* CORRECT PATH */
+
+A_response: {
+speaker: "Sarah",
+text: "Thanks for bringing this up in that way. I wasn’t fully aware the discussions were coming across like that, but I can see how it might affect the team. I’d be open to working on it.",
+character: "happy",
+next: "A_outcome"
+},
+
+A_outcome: {
+speaker: "Outcome",
+text: "Sarah feels recognised for her contributions while remaining open to constructive feedback about team collaboration. ",
+effect: "success",
+next: "hr_pass"
+},
+
+/* HR TEACHING */
+
+hr_fail: {
+speaker: "HR Mentor",
+text: "Giving feedback to high performers can be challenging. Managers often struggle to balance recognition with constructive evaluation, especially when results are strong. <br> Let’s look at how the REAL framework can help structure more effective feedback conversations. (Visual of REAL framework appears, blurring both the letters A&L)  <br> In this scenario, we’ll focus on the first two pillars: Recognise and Evaluate. ",
+next: "teach_R"
+},
+
+hr_pass: {
+speaker: "HR Mentor",
+text: "Well done! Your response balanced recognition with objective evaluation, allowing the feedback conversation to remain constructive and productive. Let’s take a closer look at the principles behind this approach.",
+next: "teach_R"
+},
+
+teach_R: {
+speaker: "HR Mentor",
+text: "When giving feedback, managers should first recognise both strengths and improvement areas clearly. <br> This means shining a spotlight on observable actions, behaviours, or challenges using specific workplace examples. <br> Instead of giving vague praise like ‘good job,’ you should point to clear contributions so employees understand exactly what they are doing well and where they can improve. <br> Recognition creates trust and helps employees become more open to constructive conversations.",
+next: "teach_E"
+},
+
+teach_E: {
+speaker: "HR Mentor",
+text: "After recognising contributions, managers need to objectively evaluate performance and behaviour based on the assessment criteria Red Cross has provided <br> Strong evaluation balances the scale through observable evidence instead of assumptions or personal interpretations. <br> Managers should weigh contributions, behaviours, and outcomes carefully to distinguish employees who meet expectations from those who truly exceed them. <br> This helps feedback remain fair, constructive, and focused on growth rather than emotion or personal judgment.",
+next: "revisit"
+},
+
+/* REVISIT */
+
+revisit: {
+speaker: "HR Mentor",
+text: "Now that you’ve learned how to apply Recognise and Evaluate, let’s revisit the conversation with Sarah. ",
+next: "revisit1"
+},
+
+revisit1: {
+speaker: "Sarah",
+text: "I understand the feedback, but I also feel like being direct is part of why I’m able to get strong results.",
+choices: [
+{ text: "Balanced feedback", next: "final_A" },
+{ text: "Press the issue", next: "final_B" },
+{ text: "Ignore the issue", next: "final_C" }
+]
+},
+
+final_A: {
+speaker: "Manager",
+text: "I appreciate you sharing that perspective, and your strong results are definitely recognised. At the same time, part of leadership and collaboration is ensuring others also feel comfortable contributing ideas during discussions.  ",
+next: "end"
+},
+
+final_B: {
+speaker: "Manager",
+text: "I understand, but the feedback has come from multiple team members, so this is something you’ll need to work on. ",
+next: "end"
+},
+
+final_C: {
+speaker: "Manager",
+text: "I see your point. Maybe the team just needs to adapt to different communication styles.",
+next: "end"
+},
+
+end: {
+speaker: "HR Mentor",
+text: "You successfully applied Recognise and Evaluate to maintain both clarity and psychological safety in the conversation! "
+}
+
 };
 
-let currentScene = "start";
-let typing = false;
+const sarahEl = document.getElementById("sarah");
+const managerEl = document.getElementById("manager");
 
+let currentScene = "profile";
 const textEl = document.getElementById("text");
 const nameEl = document.getElementById("name");
 const choicesEl = document.getElementById("choices");
+const charEl = document.getElementById("character");
+const resultEl = document.getElementById("result");
 
-function typeText(text, callback) {
-  let i = 0;
-  typing = true;
-  textEl.textContent = "";
+function typeText(text, cb) {
+  textEl.innerHTML = "";
   choicesEl.style.display = "none";
 
+  // normalize line breaks
+  text = text.replace(/\n/g, "<br>");
+
+  // split into tokens (text + <br>)
+  const tokens = text.split(/(<br>)/g);
+
+  let tokenIndex = 0;
+  let charIndex = 0;
+
   function loop() {
-    if (i < text.length) {
-      textEl.textContent += text[i++];
+    if (tokenIndex >= tokens.length) {
+      cb();
+      return;
+    }
+
+    const token = tokens[tokenIndex];
+
+    // handle line break instantly
+    if (token === "<br>") {
+      textEl.innerHTML += "<br>";
+      tokenIndex++;
+      charIndex = 0;
+      return loop();
+    }
+
+    // type normal text
+    if (charIndex < token.length) {
+      textEl.innerHTML += token[charIndex++];
       setTimeout(loop, speed);
     } else {
-      typing = false;
-      callback();
+      tokenIndex++;
+      charIndex = 0;
+      loop();
     }
   }
+
   loop();
 }
 
 function renderChoices(choices) {
-  choicesEl.innerHTML = "";
-  if (!choices || choices.length === 0) return;
+choicesEl.innerHTML = "";
+if (!choices) return;
 
-  choicesEl.style.display = "flex";
+choicesEl.style.display = "flex";
 
-  choices.forEach(choice => {
-    const btn = document.createElement("button");
-    btn.className = "choice";
-    btn.textContent = choice.text;
-    btn.onclick = () => renderScene(choice.next);
-    choicesEl.appendChild(btn);
-  });
+choices.forEach(c => {
+const btn = document.createElement("button");
+btn.className = "choice";
+btn.textContent = c.text;
+btn.onclick = () => renderScene(c.next);
+choicesEl.appendChild(btn);
+});
+}
+
+function showResult(type) {
+resultEl.style.display = "block";
+resultEl.textContent = type === "success" ? "✔" : "✖";
+setTimeout(() => resultEl.style.display = "none", 1200);
 }
 
 function renderScene(id) {
   const scene = scenes[id];
   currentScene = id;
 
-  const charEl = document.getElementById("character");
+  function setActiveSpeaker(speaker) {
+  sarahEl.classList.remove("active", "inactive");
+  managerEl.classList.remove("active", "inactive");
 
-  if (scene.speaker === "Sarah") {
-    charEl.classList.add("speaking");
+  if (speaker === "Sarah") {
+    sarahEl.classList.add("active");
+    managerEl.classList.add("inactive");
+  } else if (speaker === "Manager") {
+    managerEl.classList.add("active");
+    sarahEl.classList.add("inactive");
   } else {
-    charEl.classList.remove("speaking");
+    sarahEl.classList.add("inactive");
+    managerEl.classList.add("inactive");
   }
+}
 
   nameEl.textContent = scene.speaker;
 
+  setActiveSpeaker(scene.speaker);
+
   typeText(scene.text, () => {
+    if (scene.effect) showResult(scene.effect);
+
     if (scene.choices) {
       renderChoices(scene.choices);
     } else if (scene.next) {
@@ -274,7 +420,6 @@ function renderScene(id) {
   });
 }
 
-// start
 renderScene(currentScene);
 </script>
 
