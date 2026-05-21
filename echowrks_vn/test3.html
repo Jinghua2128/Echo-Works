@@ -34,8 +34,8 @@ body {
 }
 
 /* positions */
-.sarah { right: 0; }
-.manager { left: 0; transform: scaleX(-1); }
+.manager { right: 30; }
+.sarah { left: 0; transform: scaleX(-1); }
 
 /* states */
 .active {
@@ -130,7 +130,8 @@ body {
 </div>
 
 <script>
-const speed = 20;
+let baseSpeed = 20;
+let currentSpeed = baseSpeed;
 
 const scenes = {
 
@@ -314,6 +315,11 @@ text: "You successfully applied Recognise and Evaluate to maintain both clarity 
 const sarahEl = document.getElementById("sarah");
 const managerEl = document.getElementById("manager");
 
+let isTyping = false;
+let skipTyping = false;
+let finalHTML = "";
+let typingCallback = null;
+
 let currentScene = "profile";
 const textEl = document.getElementById("text");
 const nameEl = document.getElementById("name");
@@ -321,12 +327,24 @@ const choicesEl = document.getElementById("choices");
 const charEl = document.getElementById("character");
 const resultEl = document.getElementById("result");
 
+document.querySelector(".dialogue-container").addEventListener("click", () => {
+  if (isTyping) {
+    currentSpeed = 0.001;
+  }
+});
+
 function typeText(text, cb) {
   textEl.innerHTML = "";
   choicesEl.style.display = "none";
 
+  isTyping = true;
+  skipTyping = false;
+  currentSpeed = baseSpeed;
+  typingCallback = cb;
+
   // normalize line breaks
   text = text.replace(/\n/g, "<br>");
+  finalHTML = text
 
   // split into tokens (text + <br>)
   const tokens = text.split(/(<br>)/g);
@@ -335,6 +353,14 @@ function typeText(text, cb) {
   let charIndex = 0;
 
   function loop() {
+    if (skipTyping) {
+      textEl.innerHTML = fullText;
+      isTyping = false;
+      skipTyping = false;
+      cb();
+      return;
+    }
+
     if (tokenIndex >= tokens.length) {
       cb();
       return;
@@ -353,7 +379,7 @@ function typeText(text, cb) {
     // type normal text
     if (charIndex < token.length) {
       textEl.innerHTML += token[charIndex++];
-      setTimeout(loop, speed);
+      setTimeout(loop, currentSpeed);
     } else {
       tokenIndex++;
       charIndex = 0;
