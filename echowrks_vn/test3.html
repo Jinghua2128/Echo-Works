@@ -45,22 +45,26 @@ body {
 }
 
 .character.sarah.active {
-  animation: sarah_activeLoop 0.7s infinite steps(1);
+  animation: sarah_activeLoop 0.2s infinite steps(1);
 }
 
 @keyframes sarah_activeLoop {
-  /* 0%, 49.9% { content: url('assets/sarah.png'); } */
-  0%, 100% { content: url('assets/sarah_talk.png'); }
+  0%, 24.9% { content: url('assets/sarah_talk.png'); }
+  25%, 49.99% { content: url('assets/sarah.png'); } 
+  50%, 74.99% { content: url('assets/sarah_talk.png'); }
+  76%, 100% { content: url('assets/sarah.png'); }
 }
 
 
 .character.manager.active {
-  animation: manager_activeLoop 0.7s infinite steps(1);
+  animation: manager_activeLoop 0.2s infinite steps(1);
 }
 
 @keyframes manager_activeLoop {
-  /* 0%, 49.9% { content: url('assets/manager.png'); } */
-  0%, 100% { content: url('assets/manager_talk.png'); }
+  0%, 24.9% { content: url('assets/manager_talk.png'); }
+  25%, 49.99% { content: url('assets/manager.png'); } 
+  50%, 74.99% { content: url('assets/manager_talk.png'); }
+  76%, 100% { content: url('assets/manager.png'); }
 }
 
 .inactive {
