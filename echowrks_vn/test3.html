@@ -44,6 +44,25 @@ body {
   z-index: 2;
 }
 
+.character.sarah.active {
+  animation: sarah_activeLoop 0.7s infinite steps(1);
+}
+
+@keyframes sarah_activeLoop {
+  /* 0%, 49.9% { content: url('assets/sarah.png'); } */
+  0%, 100% { content: url('assets/sarah_talk.png'); }
+}
+
+
+.character.manager.active {
+  animation: manager_activeLoop 0.7s infinite steps(1);
+}
+
+@keyframes manager_activeLoop {
+  /* 0%, 49.9% { content: url('assets/manager.png'); } */
+  0%, 100% { content: url('assets/manager_talk.png'); }
+}
+
 .inactive {
   transform: scale(0.95);
   filter: brightness(0.4);
