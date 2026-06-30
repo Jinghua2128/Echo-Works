@@ -131,6 +131,223 @@ body {
   display: none;
   z-index: 99;
 }
+
+/* VN MOTION AND MOBILE POLISH */
+* {
+  box-sizing: border-box;
+}
+
+:root {
+  --ease: cubic-bezier(.2,.8,.2,1);
+}
+
+.container {
+  height: 100dvh;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+.manager {
+  right: 30px;
+}
+
+.character {
+  width: auto;
+  height: min(72dvh, 680px);
+  max-width: none;
+  object-fit: contain;
+  object-position: center bottom;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform-origin: center bottom;
+  transition: transform .28s var(--ease), filter .28s var(--ease), opacity .24s var(--ease), visibility .24s var(--ease);
+}
+
+.character.sarah {
+  left: clamp(-420px, -92vw, -260px);
+  transform: scaleX(-1);
+}
+
+.character.manager {
+  right: clamp(-420px, -92vw, -260px);
+}
+
+.character.sarah.active {
+  opacity: 1;
+  visibility: visible;
+  transform: scaleX(-1) scale(1.02);
+  animation: sarah_activeLoop 0.2s infinite steps(1);
+}
+
+.character.sarah.inactive {
+  opacity: 0;
+  visibility: hidden;
+  transform: scaleX(-1) scale(.98);
+  animation: none;
+}
+
+.character.manager.active {
+  opacity: 1;
+  visibility: visible;
+  transform: scale(1.02);
+  animation: manager_activeLoop 0.2s infinite steps(1);
+}
+
+.character.manager.inactive {
+  opacity: 0;
+  visibility: hidden;
+  transform: scale(.98);
+  animation: none;
+}
+
+.choices {
+  top: 24%;
+  left: 50%;
+  width: min(88vw, 360px);
+  transform: translateX(-50%);
+}
+
+.choice {
+  width: 100%;
+  min-height: 50px;
+  color: white;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.25;
+  box-shadow: 0 10px 20px rgba(244,117,117,.28);
+  transition: transform .18s var(--ease), box-shadow .18s var(--ease), filter .18s var(--ease);
+  animation: choiceIn .28s var(--ease) both;
+  touch-action: manipulation;
+}
+
+.choice:nth-child(2) {
+  animation-delay: .04s;
+}
+
+.choice:nth-child(3) {
+  animation-delay: .08s;
+}
+
+.choice:hover,
+.choice:focus-visible {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 26px rgba(244,117,117,.35);
+  filter: brightness(1.02);
+}
+
+.choice:active {
+  transform: scale(.98);
+}
+
+.dialogue-container {
+  left: 0;
+  padding: clamp(12px, 4vw, 20px);
+  animation: dialogueRise .45s var(--ease);
+}
+
+.dialogue {
+  line-height: 1.45;
+  font-size: clamp(15px, 3.6vw, 18px);
+  max-height: 34vh;
+  overflow-y: auto;
+  box-shadow: 0 16px 34px rgba(0,0,0,.18);
+}
+
+.name-tag {
+  animation: tagPop .35s var(--ease);
+}
+
+.result {
+  text-shadow: 0 12px 28px rgba(0,0,0,.25);
+  animation: resultPop .75s var(--ease);
+}
+
+@keyframes choiceIn {
+  from { opacity: 0; transform: translateY(10px) scale(.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes dialogueRise {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes tagPop {
+  0% { opacity: 0; transform: translateY(8px) scale(.95); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes resultPop {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(.75); }
+  45% { opacity: 1; transform: translate(-50%, -50%) scale(1.08); }
+  100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+@media (max-width: 640px) {
+  .character {
+    width: auto;
+    height: 66dvh;
+  }
+
+  .character.manager {
+    right: clamp(-260px, -52vw, -150px);
+  }
+
+  .character.sarah {
+    left: clamp(-390px, -88vw, -250px);
+  }
+
+  .choices {
+    top: 18%;
+    width: calc(100vw - 28px);
+    gap: 10px;
+  }
+
+  .dialogue {
+    min-height: 150px;
+    max-height: 38vh;
+    padding: 16px;
+  }
+
+  .name-tag {
+    left: 22px;
+  }
+
+  .result {
+    font-size: 90px;
+  }
+}
+
+@media (max-height: 680px) {
+  .character {
+    height: 62dvh;
+  }
+
+  .dialogue-container {
+    padding-bottom: 12px;
+  }
+
+  .dialogue {
+    min-height: 128px;
+    max-height: 42vh;
+  }
+
+  .choices {
+    top: 12%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: .001ms !important;
+  }
+}
 </style>
 </head>
 
