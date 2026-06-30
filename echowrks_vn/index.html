@@ -489,16 +489,6 @@ button,
 </div>
 
 <script>
-const firebaseConfig = {
-  apiKey: "AIzaSyBWmLMcTnFbvOJ8p5klUdFgunatA68j46k",
-  authDomain: "echoworks-e3b4d.firebaseapp.com",
-  databaseURL: "https://echoworks-e3b4d-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "echoworks-e3b4d",
-  storageBucket: "echoworks-e3b4d.firebasestorage.app",
-  messagingSenderId: "1036430593532",
-  appId: "1:1036430593532:web:6e27f85ca4a115c1a97679"
-};
-
 const firebaseVersion = "12.15.0";
 const firebaseBaseUrl = "https://www.gstatic.com/firebasejs/" + firebaseVersion;
 
@@ -510,8 +500,27 @@ let answers = loadLocalAnswers();
 
 const firebaseReady = loadFirebase();
 
+async function loadFirebaseConfig() {
+  try {
+    const localConfig = await import("./firebase-config.js");
+    if (localConfig.firebaseConfig) return localConfig.firebaseConfig;
+  } catch (error) {
+    // Local config is optional and should not be committed.
+  }
+
+  try {
+    const response = await fetch("/__/firebase/init.json", { cache: "no-store" });
+    if (response.ok) return await response.json();
+  } catch (error) {
+    // Firebase Hosting provides this file after deployment.
+  }
+
+  throw new Error("Firebase config is missing. Add local firebase-config.js or deploy to Firebase Hosting.");
+}
+
 async function loadFirebase() {
   try {
+    const firebaseConfig = await loadFirebaseConfig();
     const [appModule, authModule, databaseModule] = await Promise.all([
       import(firebaseBaseUrl + "/firebase-app.js"),
       import(firebaseBaseUrl + "/firebase-auth.js"),
@@ -563,7 +572,7 @@ async function getFirebase(messageId) {
   if (sdk) return sdk;
 
   const message = firebaseLoadError
-    ? "Firebase could not load. Check your internet connection and Firebase SDK URL."
+    ? "Firebase could not load. Add firebase-config.js locally or deploy through Firebase Hosting."
     : "Firebase is still loading. Try again in a moment.";
   setAuthMessage(messageId, message);
   return null;
