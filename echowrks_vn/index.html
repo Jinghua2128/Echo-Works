@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Feedback Playbook</title>
+
+<style>
+:root {
+  --red: #e31b23;
+  --soft-red: #f8dede;
+  --bg: #f2f2f2;
+  --card: #ffffff;
+  --text: #333;
+  --muted: #888;
+}
+
+* {
+  box-sizing: border-box;
+  font-family: "Segoe UI", sans-serif;
+}
+
+body {
+  margin: 0;
+  background: #555;
+  display: flex;
+  justify-content: center;
+}
+
+.app {
+  width: 100%;
+  max-width: 420px;
+  min-height: 100vh;
+  background: var(--bg);
+  padding: 20px;
+}
+
+/* PAGE SYSTEM */
+.page { display: none; }
+.page.active { display: block; }
+
+/* CARD STYLE */
+.card {
+  background: var(--card);
+  border-radius: 20px;
+  padding: 20px;
+  margin: 15px 0;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+}
+
+/* HEADER */
+.header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.back {
+  font-size: 20px;
+  cursor: pointer;
+}
+
+/* INPUT */
+input {
+  width: 100%;
+  padding: 12px;
+  border-radius: 12px;
+  border: none;
+  background: #eee;
+  margin: 8px 0;
+}
+
+/* BUTTON */
+button {
+  width: 100%;
+  padding: 12px;
+  border-radius: 12px;
+  border: none;
+  background: var(--red);
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.secondary {
+  background: #ddd;
+  color: #333;
+}
+
+/* PROGRESS */
+.progress-box {
+  background: var(--soft-red);
+  border-radius: 15px;
+  padding: 15px;
+}
+
+.progress-bar {
+  height: 10px;
+  background: #eee;
+  border-radius: 10px;
+  margin-top: 10px;
+}
+
+.progress {
+  height: 100%;
+  background: var(--red);
+  border-radius: 10px;
+  width: 0%;
+}
+
+/* UNITS */
+.unit {
+  border-radius: 15px;
+  padding: 15px;
+  border: 1px solid #eee;
+  margin: 10px 0;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  cursor: pointer;
+}
+
+.unit span {
+  width: 35px;
+  height: 35px;
+  border-radius: 10px;
+  background: var(--soft-red);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+}
+
+/* SURVEY */
+.option {
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid #ddd;
+  margin: 8px 0;
+  cursor: pointer;
+}
+
+.option.selected {
+  border: 2px solid var(--red);
+}
+
+/* DANGER */
+.danger {
+  border: 2px solid var(--red);
+  border-radius: 15px;
+  padding: 15px;
+}
+
+</style>
+</head>
+
+<body>
+<div class="app">
+
+<!-- LOGIN -->
+<div id="login" class="page active">
+  <div class="card">
+    <h2>Singapore Red Cross</h2>
+    <input id="loginEmail" placeholder="Email">
+    <input type="password" placeholder="Password">
+    <button onclick="login()">Log In</button>
+    <p style="color:var(--red);cursor:pointer;" onclick="goTo('signup')">Sign Up</p>
+  </div>
+</div>
+
+<!-- SIGNUP -->
+<div id="signup" class="page">
+  <div class="header">
+    <span class="back" onclick="goTo('login')">←</span>
+    <h3>Sign Up</h3>
+  </div>
+
+  <div class="card">
+    <input id="signupEmail" placeholder="Email">
+    <input type="password" placeholder="Password">
+    <button onclick="signup()">Create Account</button>
+  </div>
+</div>
+
+<!-- HOME -->
+<div id="home" class="page">
+  <h2>Feedback Playbook</h2>
+
+  <div class="unit" onclick="goToVN()"> 📄 Open Visual Novel </div>
+
+  <div class="progress-box">
+    <h3>Your Progress</h3>
+    <p id="progressText"></p>
+    <div class="progress-bar">
+      <div id="progressBar" class="progress"></div>
+    </div>
+  </div>
+
+  <h3>Learning Units</h3>
+
+  <div class="unit" onclick="goToSurvey(0)">
+    <span>1</span> Understanding Feedback
+  </div>
+
+  <div class="unit" onclick="goToSurvey(1)">
+    <span>2</span> Giving Feedback
+  </div>
+
+  <div class="unit" onclick="goToSurvey(2)">
+    <span>3</span> Receiving Feedback
+  </div>
+
+  <div class="unit" onclick="goToSurvey(3)">
+    <span>4</span> Practice
+  </div>
+
+  <div class="unit" onclick="goTo('ar')">📷 AR Scanner</div>
+  <div class="unit" onclick="goTo('settings')">⚙ Settings</div>
+</div>
+
+<!-- SURVEY -->
+<div id="survey" class="page">
+  <div class="header">
+    <span class="back" onclick="goTo('home')">←</span>
+    <h3>Survey</h3>
+  </div>
+
+  <div class="card">
+    <p id="questionTitle"></p>
+
+    <div class="option" onclick="selectOption(this,0)">Very uncomfortable</div>
+    <div class="option" onclick="selectOption(this,1)">Somewhat uncomfortable</div>
+    <div class="option" onclick="selectOption(this,2)">Neutral</div>
+    <div class="option" onclick="selectOption(this,3)">Somewhat comfortable</div>
+    <div class="option" onclick="selectOption(this,4)">Very comfortable</div>
+  </div>
+
+  <button onclick="submitSurvey()">Submit</button>
+</div>
+
+<!-- AR -->
+<div id="ar" class="page">
+  <div class="header">
+    <span class="back" onclick="goTo('home')">←</span>
+    <h3>AR Scanner</h3>
+  </div>
+
+  <div class="card" style="background:var(--soft-red)">
+    <p>Scan a quick reference card</p>
+  </div>
+
+  <div class="card">
+    <p>📷 Camera preview</p>
+  </div>
+</div>
+
+<!-- SETTINGS -->
+<div id="settings" class="page">
+  <div class="header">
+    <span class="back" onclick="goTo('home')">←</span>
+    <h3>Settings</h3>
+  </div>
+
+  <div class="card">
+    <p><b>Email:</b> <span id="userEmail"></span></p>
+    <button class="secondary" onclick="logout()">Log Out</button>
+  </div>
+
+  <div class="danger">
+    <p>Danger Zone</p>
+    <button onclick="resetProgress()">Delete Progress</button>
+  </div>
+</div>
+
+</div>
+
+<script>
+let currentSurvey = 0;
+let answers = JSON.parse(localStorage.getItem("answers")) || [null,null,null,null];
+
+function goTo(page) {
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  document.getElementById(page).classList.add("active");
+  updateUI();
+}
+
+function login() {
+  localStorage.setItem("userEmail", document.getElementById("loginEmail").value);
+  goTo("home");
+}
+
+function signup() {
+  localStorage.setItem("userEmail", document.getElementById("signupEmail").value);
+  goTo("home");
+}
+
+function goToVN() {
+  window.location.href = "test3.html";
+}
+
+function logout() {
+  goTo("login");
+}
+
+function goToSurvey(index) {
+  currentSurvey = index;
+  document.getElementById("questionTitle").innerText =
+    "Question " + (index+1) + ": How comfortable are you with this skill?";
+  goTo("survey");
+}
+
+function selectOption(el, value) {
+  document.querySelectorAll(".option").forEach(o=>o.classList.remove("selected"));
+  el.classList.add("selected");
+  answers[currentSurvey] = value;
+}
+
+function submitSurvey() {
+  localStorage.setItem("answers", JSON.stringify(answers));
+  goTo("home");
+}
+
+function updateUI() {
+  let email = localStorage.getItem("userEmail") || "";
+  document.getElementById("userEmail").innerText = email;
+
+  let completed = answers.filter(a => a !== null).length;
+  let progress = completed * 25;
+
+  document.getElementById("progressBar").style.width = progress + "%";
+  document.getElementById("progressText").innerText =
+    completed + "/4 units completed (" + progress + "%)";
+}
+
+function resetProgress() {
+  answers = [null,null,null,null];
+  localStorage.removeItem("answers");
+  updateUI();
+}
+
+updateUI();
+</script>
+
+</body>
+</html>
